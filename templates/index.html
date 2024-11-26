@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #74ebd5, #acb6e5);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: #ffffff;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Form Container */
+        form {
+            background: linear-gradient(to right, #ffffff, #f9f9f9);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #4a6572;
+            font-size: 1em;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccd5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 20px;
+            font-size: 1em;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: #4a90e2;
+            outline: none;
+            box-shadow: 0 0 8px rgba(74, 144, 226, 0.5);
+            background-color: #f4faff;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #4a90e2, #357ab7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: background 0.3s, transform 0.2s ease-in-out;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #357ab7, #2a5e93);
+            transform: translateY(-3px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        /* Result Container */
+        #result {
+            background: linear-gradient(to right, #ffffff, #f3f4f6);
+            padding: 25px;
+            margin-top: 25px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            max-width: 500px;
+            text-align: center;
+            display: none;
+        }
+
+        #result h2 {
+            font-size: 1.8em;
+            color: #4a6572;
+            margin-bottom: 15px;
+        }
+
+        #result p {
+            font-size: 1.1em;
+            color: #555;
+            margin: 10px 0;
+        }
+
+        /* Download Button */
+        #downloadLink {
+            display: inline-block;
+            text-decoration: none;
+            background: linear-gradient(to right, #4a90e2, #357ab7);
+            color: #ffffff;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.3s, transform 0.2s ease-in-out;
+        }
+
+        #downloadLink:hover {
+            background: linear-gradient(to right, #357ab7, #2a5e93);
+            transform: translateY(-2px);
+        }
+
+        #downloadLink:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <h1>Diabetes Prediction Form</h1>
+    <form id="predictionForm">
+        <label for="pregnancies">Pregnancies:</label>
+        <input type="number" id="pregnancies" name="pregnancies" required>
+        
+        <label for="glucose">Glucose:</label>
+        <input type="number" id="glucose" name="glucose" required>
+
+        <label for="blood_pressure">Blood Pressure:</label>
+        <input type="number" id="blood_pressure" name="blood_pressure" required>
+
+        <label for="skin_thickness">Skin Thickness:</label>
+        <input type="number" id="skin_thickness" name="skin_thickness" required>
+
+        <label for="insulin">Insulin:</label>
+        <input type="number" id="insulin" name="insulin" required>
+
+        <label for="bmi">BMI:</label>
+        <input type="number" id="bmi" name="bmi" step="0.1" required>
+
+        <label for="diabetes_pedigree">Diabetes Pedigree Function:</label>
+        <input type="number" id="diabetes_pedigree" name="diabetes_pedigree" step="0.01" required>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" name="age" required>
+        
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="result">
+        <h2>Prediction Result</h2>
+        <p><strong>Prediction:</strong> <span id="prediction"></span></p>
+        <p><strong>Probability:</strong> <span id="probability"></span></p>
+        <p><strong>Precautions:</strong> <span id="precautions"></span></p>
+        <p><strong>Medications:</strong> <span id="medications"></span></p>
+        <a id="downloadLink" href="/download_report" download>Download Report</a>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').onsubmit = async function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (result.error) {
+                alert(result.error);
+            } else {
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('prediction').innerText = result.prediction;
+                document.getElementById('probability').innerText = (result.probability * 100).toFixed(2) + '%';
+                document.getElementById('precautions').innerText = result.precautions;
+                document.getElementById('medications').innerText = result.medications;
+                document.getElementById('downloadLink').style.display = 'inline';
+            }
+        };
+    </script>
+</body>
+</html>
